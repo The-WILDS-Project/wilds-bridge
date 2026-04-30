@@ -114,9 +114,9 @@ class BrokerConnection:
             logger.debug("Subscribed to /topic/%s", topic)
 
     def _disconnect_silent(self) -> None:
-        if self._conn is not None:
+        if conn := self._conn:
             try:
-                self._conn.disconnect()
+                conn.disconnect()
             except Exception:
                 pass
             self._conn = None

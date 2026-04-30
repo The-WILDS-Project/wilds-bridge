@@ -120,10 +120,10 @@ class LDTBroker:
 
     async def stop(self) -> None:
         """Cancel the dispatch loop and disconnect."""
-        if self._dispatch_task is not None:
-            self._dispatch_task.cancel()
+        if task := self._dispatch_task:
+            task.cancel()
             try:
-                await self._dispatch_task
+                await task
             except asyncio.CancelledError:
                 pass
         if self._connection is not None:
