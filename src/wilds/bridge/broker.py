@@ -37,20 +37,29 @@ from collections import deque
 from collections.abc import Awaitable, Callable
 
 from .config import (
-    BrokerConfig,
-    TOPIC_TCS_TELEMETRY,
-    TOPIC_TCS_STATUS,
-    TOPIC_WRS_TELEMETRY,
-    TOPIC_WILDS_TELEMETRY,
+    TOPIC_AOS_DATA_PACKET,
+    TOPIC_AOS_FOCUS_ABSOLUTE,
+    TOPIC_AOS_FOCUS_CLEAR,
+    TOPIC_AOS_FOCUS_RELATIVE,
+    TOPIC_INSTRUMENT_CUBE,
     TOPIC_TCS_COMMAND,
+    TOPIC_TCS_STATUS,
+    TOPIC_TCS_TELEMETRY,
+    TOPIC_WILDS_TELEMETRY,
+    TOPIC_WRS_DATA_PACKET,
+    TOPIC_WRS_TELEMETRY,
+    BrokerConfig,
 )
 from .connection import BrokerConnection
 from .listener import BrokerListener
-from .models.tcs_telemetry import TcsTelemetry
+from .models.aos_data_packet import AosDataPacket
+from .models.instrument_cube_telemetry import InstrumentCubeTelemetry
+from .models.tcs_command import TcsOffsetCommand
 from .models.tcs_status import TcsStatus
-from .models.wrs_telemetry import WrsTelemetry
+from .models.tcs_telemetry import TcsTelemetry
 from .models.wilds_telemetry import WildsTelemetry
-from .models.tcs_command import TcsCommand
+from .models.wrs_data_packet import WrsDataPacket
+from .models.wrs_telemetry import WrsTelemetry
 from .store import TelemetryStore
 
 logger = logging.getLogger(__name__)
@@ -106,9 +115,7 @@ class LDTBroker:
         self._listener = BrokerListener(self._loop, self._queue)
         self._connection = BrokerConnection(self._cfg, self._listener)
         await self._connection.connect()
-        self._dispatch_task = asyncio.create_task(
-            self._dispatch_loop(), name="ldt-broker-dispatch"
-        )
+        self._dispatch_task = asyncio.create_task(self._dispatch_loop(), name="ldt-broker-dispatch")
         logger.info("LDTBroker started")
 
     async def stop(self) -> None:
@@ -132,14 +139,27 @@ class LDTBroker:
         body = telemetry.to_xml(encoding="unicode")
         assert self._connection is not None
         assert body is not None and isinstance(body, (str, bytes))
-        self._connection.send(TOPIC_WILDS_TELEMETRY, body.decode() if isinstance(body, bytes) else body)
+        self._connection.send(
+            TOPIC_WILDS_TELEMETRY, body.decode() if isinstance(body, bytes) else body
+        )
 
-    async def send_tcs_command(self, command: TcsCommand) -> None:
+    async def send_tcs_command(self, command: TcsOffsetCommand) -> None:
         """Send a TCS offset command to TCSTcsCommandSV."""
         body = command.to_xml(encoding="unicode")
         assert self._connection is not None
         assert body is not None and isinstance(body, (str, bytes))
         self._connection.send(TOPIC_TCS_COMMAND, body.decode() if isinstance(body, bytes) else body)
+
+    async def send_aos_focus_offset(self, meters: float, *, relative: bool = False) -> None:
+        """Send an AOS focus offset command. Units: meters."""
+        topic = TOPIC_AOS_FOCUS_RELATIVE if relative else TOPIC_AOS_FOCUS_ABSOLUTE
+        assert self._connection is not None
+        self._connection.send(topic, str(meters))
+
+    async def send_aos_focus_clear(self) -> None:
+        """Reset the AOS focus offset to zero."""
+        assert self._connection is not None
+        self._connection.send(TOPIC_AOS_FOCUS_CLEAR, "true")
 
     # ------------------------------------------------------------------
     # Callback registration
@@ -157,9 +177,11 @@ class LDTBroker:
             async def handle(msg: TcsTelemetry) -> None:
                 print(msg.CurrentParAngle)
         """
+
         def decorator(fn: MessageCallback) -> MessageCallback:
             self._callbacks.setdefault(topic, []).append(fn)
             return fn
+
         return decorator
 
     def add_callback(self, topic: str, fn: MessageCallback) -> None:
@@ -219,9 +241,7 @@ class LDTBroker:
 
     def _is_duplicate(self, topic: str, body: str) -> bool:
         digest = hashlib.sha256(body.encode()).hexdigest()
-        cache = self._dedup.setdefault(
-            topic, deque(maxlen=self._cfg.dedup_cache_size)
-        )
+        cache = self._dedup.setdefault(topic, deque(maxlen=self._cfg.dedup_cache_size))
         if digest in cache:
             return True
         cache.append(digest)
@@ -243,6 +263,12 @@ class LDTBroker:
                 return TcsStatus.from_xml(body)
             if topic == TOPIC_WRS_TELEMETRY:
                 return WrsTelemetry.from_xml(body)
+            if topic == TOPIC_WRS_DATA_PACKET:
+                return WrsDataPacket.from_xml(body)
+            if topic == TOPIC_AOS_DATA_PACKET:
+                return AosDataPacket.from_xml(body)
+            if topic == TOPIC_INSTRUMENT_CUBE:
+                return InstrumentCubeTelemetry.from_xml(body)
             if topic == TOPIC_WILDS_TELEMETRY:
                 return WildsTelemetry.from_xml(body)
         except Exception:
@@ -263,5 +289,11 @@ class LDTBroker:
             self.store.tcs_status = parsed
         elif topic == TOPIC_WRS_TELEMETRY and isinstance(parsed, WrsTelemetry):
             self.store.wrs = parsed
+        elif topic == TOPIC_WRS_DATA_PACKET and isinstance(parsed, WrsDataPacket):
+            self.store.wrs_packet = parsed
+        elif topic == TOPIC_AOS_DATA_PACKET and isinstance(parsed, AosDataPacket):
+            self.store.aos = parsed
+        elif topic == TOPIC_INSTRUMENT_CUBE and isinstance(parsed, InstrumentCubeTelemetry):
+            self.store.instrument_cube = parsed
         elif topic == TOPIC_WILDS_TELEMETRY and isinstance(parsed, WildsTelemetry):
             self.store.wilds = parsed

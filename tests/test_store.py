@@ -3,17 +3,17 @@ Unit tests for TelemetryStore.
 No network required.
 """
 
-from wilds.bridge.store import TelemetryStore
-from wilds.bridge.models.tcs_telemetry import TcsTelemetry
 from wilds.bridge.models.tcs_status import TcsStatus
-from wilds.bridge.models.wrs_telemetry import WrsTelemetry
+from wilds.bridge.models.tcs_telemetry import TcsTelemetry
 from wilds.bridge.models.wilds_telemetry import WildsTelemetry
+from wilds.bridge.models.wrs_telemetry import WrsTelemetry
+from wilds.bridge.store import TelemetryStore
 
 from .fixtures import (
-    TCS_TELEMETRY_XML,
     TCS_STATUS_XML,
-    WRS_TELEMETRY_XML,
+    TCS_TELEMETRY_XML,
     WILDS_TELEMETRY_XML,
+    WRS_TELEMETRY_XML,
 )
 
 
@@ -23,6 +23,9 @@ class TestTelemetryStore:
         assert store.tcs is None
         assert store.tcs_status is None
         assert store.wrs is None
+        assert store.wrs_packet is None
+        assert store.aos is None
+        assert store.instrument_cube is None
         assert store.wilds is None
 
     def test_assign_tcs(self):
@@ -30,7 +33,7 @@ class TestTelemetryStore:
         t = TcsTelemetry.from_xml(TCS_TELEMETRY_XML)
         store.tcs = t
         assert store.tcs is t
-        assert store.tcs.Timestamp == 1733652000
+        assert store.tcs.TimeStamp == 1733652000
 
     def test_assign_tcs_status(self):
         store = TelemetryStore()
@@ -64,15 +67,20 @@ class TestTelemetryStore:
         assert store.tcs is None
         assert store.tcs_status is None
         assert store.wrs is None
+        assert store.wrs_packet is None
+        assert store.aos is None
+        assert store.instrument_cube is None
         assert store.wilds is None
 
     def test_overwrite_replaces_value(self):
         store = TelemetryStore()
         t1 = TcsTelemetry.from_xml(TCS_TELEMETRY_XML)
         store.tcs = t1
-        t2 = TcsTelemetry.from_xml(TCS_TELEMETRY_XML.replace(
-            "<Timestamp>1733652000</Timestamp>",
-            "<Timestamp>1733652001</Timestamp>",
-        ))
+        t2 = TcsTelemetry.from_xml(
+            TCS_TELEMETRY_XML.replace(
+                "<TimeStamp>1733652000</TimeStamp>",
+                "<TimeStamp>1733652001</TimeStamp>",
+            )
+        )
         store.tcs = t2
-        assert store.tcs.Timestamp == 1733652001
+        assert store.tcs.TimeStamp == 1733652001

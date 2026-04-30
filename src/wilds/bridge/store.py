@@ -18,10 +18,13 @@ Usage::
 
 from dataclasses import dataclass, field
 
-from .models.tcs_telemetry import TcsTelemetry
+from .models.aos_data_packet import AosDataPacket
+from .models.instrument_cube_telemetry import InstrumentCubeTelemetry
 from .models.tcs_status import TcsStatus
-from .models.wrs_telemetry import WrsTelemetry
+from .models.tcs_telemetry import TcsTelemetry
 from .models.wilds_telemetry import WildsTelemetry
+from .models.wrs_data_packet import WrsDataPacket
+from .models.wrs_telemetry import WrsTelemetry
 
 
 @dataclass
@@ -35,13 +38,22 @@ class TelemetryStore:
     """
 
     tcs: TcsTelemetry | None = field(default=None)
-    """Latest tcs.loisTelemetry frame (~2 Hz)."""
+    """Latest tcs.loisTelemetry frame (~2 Hz, JOE only)."""
 
     tcs_status: TcsStatus | None = field(default=None)
     """Latest TCSTcsStatusSV frame (~1 Hz)."""
 
     wrs: WrsTelemetry | None = field(default=None)
-    """Latest wrs.loisTelemetry frame (~1 Hz)."""
+    """Latest wrs.loisTelemetry frame (schema unverified, placeholder)."""
+
+    wrs_packet: WrsDataPacket | None = field(default=None)
+    """Latest WRS.WRSPubDataSV.WRSDataPacket frame (~1 Hz, metric units)."""
+
+    aos: AosDataPacket | None = field(default=None)
+    """Latest AOS.AOSPubDataSV.AOSDataPacket frame (~1 Hz). totalFocusOffset in meters."""
+
+    instrument_cube: InstrumentCubeTelemetry | None = field(default=None)
+    """Latest instrumentCube.loisTelemetry frame (~1 Hz)."""
 
     wilds: WildsTelemetry | None = field(default=None)
     """Latest wilds.loisTelemetry frame (our own output, echoed back)."""
@@ -51,4 +63,7 @@ class TelemetryStore:
         self.tcs = None
         self.tcs_status = None
         self.wrs = None
+        self.wrs_packet = None
+        self.aos = None
+        self.instrument_cube = None
         self.wilds = None

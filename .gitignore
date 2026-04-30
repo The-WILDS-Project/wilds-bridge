@@ -29,3 +29,7 @@ coverage.xml
 # OS
 .DS_Store
 Thumbs.db
+
+# Local Claude Code settings (machine-specific paths)
+.claude/settings.local.json
+.claude/settings.json

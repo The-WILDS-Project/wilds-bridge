@@ -54,7 +54,7 @@ class BrokerConnection:
         loop = asyncio.get_running_loop()
         self._conn = stomp.Connection(
             [(self._cfg.host, self._cfg.port)],
-            reconnect_attempts_max=0,   # we handle reconnect ourselves
+            reconnect_attempts_max=1,  # we handle reconnect ourselves; 0 means don't try at all in stomp.py
         )
         self._conn.set_listener("bridge", self._listener)
         await loop.run_in_executor(
@@ -71,7 +71,9 @@ class BrokerConnection:
         self._disconnect_silent()
         logger.info(
             "Reconnecting to %s:%s in %.1f s …",
-            self._cfg.host, self._cfg.port, self._cfg.reconnect_sleep,
+            self._cfg.host,
+            self._cfg.port,
+            self._cfg.reconnect_sleep,
         )
         await asyncio.sleep(self._cfg.reconnect_sleep)
         await self.connect()

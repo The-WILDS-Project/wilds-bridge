@@ -32,7 +32,7 @@ class BrokerListener(stomp.ConnectionListener):
         topic = frame.headers.get("destination", "")
         # Strip leading /topic/ prefix that ActiveMQ adds
         if topic.startswith("/topic/"):
-            topic = topic[len("/topic/"):]
+            topic = topic[len("/topic/") :]
         body: str = frame.body
         self._loop.call_soon_threadsafe(self._queue.put_nowait, (topic, body))
 

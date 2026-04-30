@@ -14,70 +14,43 @@ Schema reference:
   https://github.com/LowellObservatory/ligmos/blob/master/ligmos/schemas/tcs.loisTelemetry.xsd
 """
 
+from typing import Literal
+
 from pydantic_xml import BaseXmlModel, element
 
+from .types import CoordFrame, CoverState, TcsHealth, TcsState
 
-class TcsTelemetry(BaseXmlModel, tag="tcsTelemetry"):
-    # Unix epoch seconds
-    Timestamp: int = element()
 
-    # Local Sidereal Time  e.g. "04:41:18.100"
-    TCSLST: str = element()
+class TcsTelemetry(BaseXmlModel, tag="TCSTelemetry"):
+    # Field order matches XSD element order for correct pydantic-xml parsing.
+    # All fields are minOccurs="0" in the schema.
 
-    # UTC datetime string  e.g. "2019-12-08T06:59:59.893Z"
-    TCSUTC: str = element()
-
-    # RA/Dec demand (sexagesimal strings)
-    DemandRa: str = element()
-    DemandDec: str = element()
-
-    # Hour angle  e.g. "00:00:07"
-    CurrentHourAngle: str = element()
-
-    # Zenith distance, azimuth, elevation (degrees as floats-in-strings)
-    TCSCurrentZenithDistance: str = element()
-    TCSCurrentAzimuth: str = element()
-    TCSCurrentElev: str = element()
-
-    # Rotator angles (degrees as floats-in-strings)
-    TCSCurrentRotatorPA: str = element()
-    TCSCurrentRotatorIPA: str = element()
-    TCSCurrentRotatorIAA: str = element()
-
-    # "Target" or "Fixed"
-    RotatorFrame: str = element()
-
-    # "FK4", "FK5", "APPT", "GAPPT", "AZEL"
-    TargetFrame: str = element()
-
-    # Equinox year  e.g. "2000.0"
-    equinox: str = element()
-
-    # TCS state machine
-    TCSState: str = element()       # STANDBY | OFF | ENABLED | DISABLED | FAULT
-    TCSHealth: str = element()      # GOOD | WARNING | BAD
-    TCSHeartBeat: int = element()   # 1 Hz counter from TCS startup
-    TCSAccessMode: str = element()  # Operator | Engineer | ...
-
-    # Pointing
-    InPosition: bool = element()
-    ScienceTargetName: str = element()
-
-    # Parallactic angle (degrees as float-in-string)
-    CurrentParAngle: str = element()
-
-    # Mount temperature (°C)  — can be "UNKNOWN" at startup
-    MountTemperature: str | None = element(default=None)
-
-    # Mirror cover
-    m1CoverState: str = element()   # Open | Closed | PartiallyOpen | Unknown
-
-    # Dome
-    MountDomeAzimuthDifference: str | None = element(default=None)
-    DomeOccultationWarning: bool = element()
-
-    # Flat field lamp power supply state
-    CLSLowBankState: str | None = element(default=None)
-
-    # Dome shutter
-    DSSPositionStatus: str | None = element(default=None)
+    TimeStamp: int | None = element(default=None)                 # Unix epoch seconds
+    TCSLST: str | None = element(default=None)                    # e.g. "04:41:18.100"
+    TCSUTC: str | None = element(default=None)                    # e.g. "2019-12-08T06:59:59.893Z"
+    DemandRa: str | None = element(default=None)                  # sexagesimal
+    DemandDec: str | None = element(default=None)                 # sexagesimal
+    CurrentHourAngle: str | None = element(default=None)          # e.g. "00:00:07"
+    TCSCurrentZenithDistance: str | None = element(default=None)  # degrees
+    TCSCurrentAzimuth: str | None = element(default=None)         # degrees
+    TCSCurrentElev: str | None = element(default=None)            # degrees
+    MountGuideMode: str | None = element(default=None)            # NoTrack | ClosedLoop | ... (not fully enumerated)
+    ScienceTargetName: str | None = element(default=None)
+    m1CoverState: CoverState | None = element(default=None)
+    MountDomeAzimuthDifference: str | None = element(default=None)  # can be "UNKNOWN" (JOE bug)
+    DomeOccultationWarning: bool | None = element(default=None)
+    CurrentParAngle: str | None = element(default=None)           # degrees
+    TCSCurrentRotatorPA: str | None = element(default=None)       # degrees
+    TCSCurrentRotatorIAA: str | None = element(default=None)      # degrees
+    TCSCurrentRotatorIPA: str | None = element(default=None)      # degrees
+    RotatorFrame: Literal["Target", "Fixed"] | None = element(default=None)
+    TargetFrame: CoordFrame | None = element(default=None)
+    equinox: str | None = element(default=None)                   # e.g. "2000.0"
+    TCSState: TcsState | None = element(default=None)
+    TCSHealth: TcsHealth | None = element(default=None)
+    TCSHeartBeat: int | None = element(default=None)
+    TCSAccessMode: str | None = element(default=None)             # Operator | Engineer | ... (not fully enumerated)
+    InPosition: bool | None = element(default=None)
+    MountTemperature: str | None = element(default=None)          # °C; can be "UNKNOWN" at startup
+    CLSLowBankState: Literal["On", "Off", "Ramping", "Fault", "Unknown"] | None = element(default=None)
+    DSSPositionStatus: CoverState | None = element(default=None)
