@@ -54,13 +54,15 @@ from .connection import BrokerConnection
 from .listener import BrokerListener
 from .models.aos_data_packet import AosDataPacket
 from .models.instrument_cube_telemetry import InstrumentCubeTelemetry
-from .models.tcs_command import TcsOffsetCommand
+from .models.tcs_command import TcsAbsorbOffsetCommand, TcsClearOffsetCommand, TcsOffsetCommand
 from .models.tcs_status import TcsStatus
 from .models.tcs_telemetry import TcsTelemetry
 from .models.wilds_telemetry import WildsTelemetry
 from .models.wrs_data_packet import WrsDataPacket
 from .models.wrs_telemetry import WrsTelemetry
 from .store import TelemetryStore
+
+TcsCommand = TcsOffsetCommand | TcsClearOffsetCommand | TcsAbsorbOffsetCommand
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +145,7 @@ class LDTBroker:
             TOPIC_WILDS_TELEMETRY, body.decode() if isinstance(body, bytes) else body
         )
 
-    async def send_tcs_command(self, command: TcsOffsetCommand) -> None:
+    async def send_tcs_command(self, command: TcsCommand) -> None:
         """Send a TCS offset command to TCSTcsCommandSV."""
         body = command.to_xml(encoding="unicode")
         assert self._connection is not None
