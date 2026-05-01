@@ -20,3 +20,7 @@ CoordFrame = Literal["FK4", "FK5", "APPT", "GAPPT", "AZEL"]
 # Hardware positions
 CoverState = Literal["Open", "Closed", "PartiallyOpen", "Unknown"]
 FoldMirrorState = Literal["Unknown", "Home", "Extended"]
+
+# New-science-target command fields
+EquinoxPrefix = Literal["J", "B"]
+RotatorFrame = Literal["Fixed", "Target"]

@@ -42,6 +42,7 @@ from .config import (
     TOPIC_AOS_FOCUS_CLEAR,
     TOPIC_AOS_FOCUS_RELATIVE,
     TOPIC_INSTRUMENT_CUBE,
+    TOPIC_NEW_SCIENCE_TARGET,
     TOPIC_TCS_COMMAND,
     TOPIC_TCS_STATUS,
     TOPIC_TCS_TELEMETRY,
@@ -54,7 +55,12 @@ from .connection import BrokerConnection
 from .listener import BrokerListener
 from .models.aos_data_packet import AosDataPacket
 from .models.instrument_cube_telemetry import InstrumentCubeTelemetry
-from .models.tcs_command import TcsAbsorbOffsetCommand, TcsClearOffsetCommand, TcsOffsetCommand
+from .models.tcs_command import (
+    TcsAbsorbOffsetCommand,
+    TcsClearOffsetCommand,
+    TcsNewScienceTargetCommand,
+    TcsOffsetCommand,
+)
 from .models.tcs_status import TcsStatus
 from .models.tcs_telemetry import TcsTelemetry
 from .models.wilds_telemetry import WildsTelemetry
@@ -151,6 +157,13 @@ class LDTBroker:
         assert self._connection is not None
         assert body is not None and isinstance(body, (str, bytes))
         self._connection.send(TOPIC_TCS_COMMAND, body.decode() if isinstance(body, bytes) else body)
+
+    async def send_new_target(self, command: TcsNewScienceTargetCommand) -> None:
+        """Send a new science target command to NewScienceTargetSV."""
+        body = command.to_xml(encoding="unicode")
+        assert self._connection is not None
+        assert body is not None and isinstance(body, (str, bytes))
+        self._connection.send(TOPIC_NEW_SCIENCE_TARGET, body.decode() if isinstance(body, bytes) else body)
 
     async def send_aos_focus_offset(self, meters: float, *, relative: bool = False) -> None:
         """Send an AOS focus offset command. Units: meters."""
