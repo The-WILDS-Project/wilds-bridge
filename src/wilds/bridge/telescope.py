@@ -17,8 +17,9 @@ Usage::
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
+
+from pydantic import BaseModel, ConfigDict
 
 from .models.tcs_command import (
     TcsAbsorbOffsetCommand,
@@ -42,9 +43,10 @@ if TYPE_CHECKING:
     from .broker import LDTBroker
 
 
-@dataclass(frozen=True)
-class TelescopeStatus:
+class TelescopeStatus(BaseModel):
     """Snapshot of telescope state from both telemetry sources."""
+
+    model_config = ConfigDict(frozen=True)
 
     # From tcs.loisTelemetry (~2 Hz)
     target_name: str | None
