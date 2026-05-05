@@ -24,3 +24,7 @@ FoldMirrorState = Literal["Unknown", "Home", "Extended"]
 # New-science-target command fields
 EquinoxPrefix = Literal["J", "B"]
 RotatorFrame = Literal["Fixed", "Target"]
+
+# wilds-control: slit and ADC
+SlitMoveMode = Literal["abs", "jog"]
+AdcIndex = Literal[1, 2]
