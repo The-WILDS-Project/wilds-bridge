@@ -1,4 +1,5 @@
 from .aos_data_packet import AosDataPacket
+from .deveny_telemetry import DevenyTelemetry
 from .instrument_cube_telemetry import InstrumentCubeTelemetry
 from .tcs_command import TcsAbsorbOffsetCommand, TcsClearOffsetCommand, TcsOffsetCommand
 from .tcs_status import TcsStatus
@@ -15,6 +16,7 @@ __all__ = [
     "AosDataPacket",
     "InstrumentCubeTelemetry",
     "WildsTelemetry",
+    "DevenyTelemetry",
     "TcsOffsetCommand",
     "TcsClearOffsetCommand",
     "TcsAbsorbOffsetCommand",

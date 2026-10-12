@@ -9,6 +9,7 @@ No network or broker required.
 import pytest
 
 from wilds.bridge.models.aos_data_packet import AosDataPacket
+from wilds.bridge.models.deveny_telemetry import DevenyTelemetry
 from wilds.bridge.models.instrument_cube_telemetry import InstrumentCubeTelemetry
 from wilds.bridge.models.tcs_command import TcsClearOffsetCommand, TcsOffsetCommand
 from wilds.bridge.models.tcs_status import TcsStatus
@@ -19,6 +20,8 @@ from wilds.bridge.models.wrs_telemetry import WrsTelemetry
 
 from .fixtures import (
     AOS_DATA_PACKET_XML,
+    DEVENY_TELEMETRY_XML,
+    DEVENY_TELEMETRY_XML_MINIMAL,
     INSTRUMENT_CUBE_XML,
     TCS_CLEAR_OFFSET_XML,
     TCS_OFFSET_COMMAND_XML,
@@ -173,6 +176,40 @@ class TestWrsTelemetry:
         restored = roundtrip(original)
         assert restored.AirTemp == pytest.approx(original.AirTemp)
         assert restored.WindSpeed == pytest.approx(original.WindSpeed)
+
+
+# ---------------------------------------------------------------------------
+# DevenyTelemetry (deveny.loisTelemetry)
+# ---------------------------------------------------------------------------
+
+
+class TestDevenyTelemetry:
+    def test_parse_full(self):
+        d = DevenyTelemetry.from_xml(DEVENY_TELEMETRY_XML)
+        assert d.TimeStamp == 1733652000
+        assert d.Lamp1Name == "Cd"
+        assert d.Lamp1State is True
+        assert d.Lamp2State is False
+        assert d.Lamp4Name == "Hg"
+        assert d.Lamp4State is True
+        assert d.SlitWidthMM == pytest.approx(1.2)
+        assert d.SlitWidthASEC == pytest.approx(3.8)
+        assert d.GratingTilt == pytest.approx(27.5)
+        assert d.CollimatorFocus == pytest.approx(15.25)
+        assert d.Grating == "DV2 (300/4000)"
+        assert d.RearFilter == "Clear (C)"
+
+    def test_parse_minimal(self):
+        d = DevenyTelemetry.from_xml(DEVENY_TELEMETRY_XML_MINIMAL)
+        assert d.TimeStamp == 1733652001
+        assert d.Lamp1Name is None
+        assert d.SlitWidthMM is None
+        assert d.Grating is None
+
+    def test_roundtrip(self):
+        original = DevenyTelemetry.from_xml(DEVENY_TELEMETRY_XML)
+        restored = roundtrip(original)
+        assert restored == original
 
 
 # ---------------------------------------------------------------------------

@@ -177,6 +177,30 @@ WRS_TELEMETRY_XML_MINIMAL = """\
   <Timestamp>1733652001</Timestamp>
 </wrsTelemetry>"""
 
+DEVENY_TELEMETRY_XML = """\
+<DevenyTelemetry>
+  <TimeStamp>1733652000</TimeStamp>
+  <Lamp1Name>Cd</Lamp1Name>
+  <Lamp1State>true</Lamp1State>
+  <Lamp2Name>Ar</Lamp2Name>
+  <Lamp2State>false</Lamp2State>
+  <Lamp3Name>Ne</Lamp3Name>
+  <Lamp3State>false</Lamp3State>
+  <Lamp4Name>Hg</Lamp4Name>
+  <Lamp4State>true</Lamp4State>
+  <SlitWidthMM>1.2</SlitWidthMM>
+  <SlitWidthASEC>3.8</SlitWidthASEC>
+  <GratingTilt>27.5</GratingTilt>
+  <CollimatorFocus>15.25</CollimatorFocus>
+  <Grating>DV2 (300/4000)</Grating>
+  <RearFilter>Clear (C)</RearFilter>
+</DevenyTelemetry>"""
+
+DEVENY_TELEMETRY_XML_MINIMAL = """\
+<DevenyTelemetry>
+  <TimeStamp>1733652001</TimeStamp>
+</DevenyTelemetry>"""
+
 WRS_DATA_PACKET_XML = """\
 <WRSDataPacket>
   <airTemp_C>7.3</airTemp_C>
