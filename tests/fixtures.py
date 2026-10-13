@@ -272,8 +272,14 @@ INSTRUMENT_CUBE_XML = """\
 WILDS_TELEMETRY_XML = """\
 <wildsTelemetry>
   <Timestamp>1733652000</Timestamp>
-  <SlitPositionMM>12.5</SlitPositionMM>
-  <SlitPositionASEC>1.25</SlitPositionASEC>
+  <SlitWidthMM>12.5</SlitWidthMM>
+  <SlitWidthASEC>1.25</SlitWidthASEC>
+  <Lamp1Name>ThAr</Lamp1Name>
+  <Lamp1State>true</Lamp1State>
+  <Lamp1Position>In</Lamp1Position>
+  <Lamp2Name>Quartz</Lamp2Name>
+  <Lamp2State>false</Lamp2State>
+  <Lamp2Position>Out</Lamp2Position>
   <ADC1PositionMM>5.0</ADC1PositionMM>
   <ADC2PositionMM>7.3</ADC2PositionMM>
   <ADCParAngleDeg>-12.34</ADCParAngleDeg>

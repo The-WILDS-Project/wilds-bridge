@@ -28,3 +28,8 @@ RotatorFrame = Literal["Fixed", "Target"]
 # wilds-control: slit and ADC
 SlitMoveMode = Literal["abs", "jog"]
 AdcIndex = Literal[1, 2]
+
+# wilds-control: calibration lamps
+LampIndex = Literal[1, 2]
+LampPosition = Literal["In", "Out", "Moving", "Unknown"]
+LampMoveTarget = Literal["In", "Out"]

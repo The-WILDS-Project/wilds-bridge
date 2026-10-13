@@ -336,8 +336,13 @@ class TestWildsTelemetry:
     def test_parse(self):
         w = WildsTelemetry.from_xml(WILDS_TELEMETRY_XML)
         assert w.Timestamp == 1733652000
-        assert w.SlitPositionMM == pytest.approx(12.5)
-        assert w.SlitPositionASEC == pytest.approx(1.25)
+        assert w.SlitWidthMM == pytest.approx(12.5)
+        assert w.SlitWidthASEC == pytest.approx(1.25)
+        assert w.Lamp1Name == "ThAr"
+        assert w.Lamp1State is True
+        assert w.Lamp1Position == "In"
+        assert w.Lamp2State is False
+        assert w.Lamp2Position == "Out"
         assert w.ADC1PositionMM == pytest.approx(5.0)
         assert w.ADCParAngleDeg == pytest.approx(-12.34)
         assert w.Shutter1State == "Open"
@@ -348,21 +353,28 @@ class TestWildsTelemetry:
     def test_roundtrip(self):
         original = WildsTelemetry.from_xml(WILDS_TELEMETRY_XML)
         restored = roundtrip(original)
-        assert restored.SlitPositionMM == pytest.approx(original.SlitPositionMM)
+        assert restored.SlitWidthMM == pytest.approx(original.SlitWidthMM)
+        assert restored.Lamp1Position == original.Lamp1Position
         assert restored.LastFITSFileUV == original.LastFITSFileUV
 
     def test_now_constructor(self):
-        w = WildsTelemetry.now(SlitPositionMM=5.0, VISExposureState="IDLE")
+        w = WildsTelemetry.now(SlitWidthMM=5.0, VISExposureState="IDLE")
         assert w.Timestamp > 0
-        assert w.SlitPositionMM == pytest.approx(5.0)
+        assert w.SlitWidthMM == pytest.approx(5.0)
         assert w.VISExposureState == "IDLE"
         assert w.UVExposureState is None
 
     def test_defaults_all_none(self):
         w = WildsTelemetry.now()
-        assert w.SlitPositionMM is None
+        assert w.SlitWidthMM is None
         assert w.ADC1PositionMM is None
         assert w.Shutter1State is None
+        assert w.Lamp1State is None
+        assert w.Lamp2Position is None
+
+    def test_invalid_lamp_position_rejected(self):
+        with pytest.raises(ValueError):
+            WildsTelemetry.now(Lamp1Position="Sideways")
 
 
 # ---------------------------------------------------------------------------

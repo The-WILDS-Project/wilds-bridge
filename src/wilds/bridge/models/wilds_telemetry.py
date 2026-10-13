@@ -14,14 +14,26 @@ import datetime
 
 from pydantic_xml import BaseXmlModel, element
 
+from .types import LampPosition
+
 
 class WildsTelemetry(BaseXmlModel, tag="wildsTelemetry"):
     # Unix epoch seconds — always present
     Timestamp: int = element()
 
     # --- Slit ---
-    SlitPositionMM: float | None = element(default=None)  # mm
-    SlitPositionASEC: float | None = element(default=None)  # arcseconds on sky
+    # Width set by a stage; the spectrograph cameras see the light through the slit
+    SlitWidthMM: float | None = element(default=None)  # mm
+    SlitWidthASEC: float | None = element(default=None)  # arcseconds on sky
+
+    # --- Calibration lamps ---
+    # Two lamps, each switched on/off and moved in/out of the optical path by a stage
+    Lamp1Name: str | None = element(default=None)
+    Lamp1State: bool | None = element(default=None)  # on/off
+    Lamp1Position: LampPosition | None = element(default=None)
+    Lamp2Name: str | None = element(default=None)
+    Lamp2State: bool | None = element(default=None)
+    Lamp2Position: LampPosition | None = element(default=None)
 
     # --- ADC ---
     # Two linear stages; positions in mm from home
@@ -30,8 +42,8 @@ class WildsTelemetry(BaseXmlModel, tag="wildsTelemetry"):
     # Parallactic angle used for ADC positioning (from tcs.loisTelemetry)
     ADCParAngleDeg: float | None = element(default=None)
 
-    # --- Shutters ---
-    # One or more shutters; names TBD pending hardware selection
+    # --- Shutter ---
+    # Single shutter, driven by the Archon
     Shutter1State: str | None = element(default=None)  # Open | Closed | Unknown
 
     # --- Detectors ---
@@ -46,6 +58,7 @@ class WildsTelemetry(BaseXmlModel, tag="wildsTelemetry"):
     UVCCDTemp: float | None = element(default=None)  # °C
 
     # --- Guide camera ---
+    # ZWO ASI294-class camera viewing the sky around the slit via a static mirror
     GuideCameraState: str | None = element(default=None)
 
     # --- Software ---

@@ -53,7 +53,7 @@ class TestTelemetryStore:
         w = WildsTelemetry.from_xml(WILDS_TELEMETRY_XML)
         store.wilds = w
         assert store.wilds is w
-        assert store.wilds.SlitPositionMM == 12.5
+        assert store.wilds.SlitWidthMM == 12.5
 
     def test_clear_resets_all(self):
         store = TelemetryStore()
