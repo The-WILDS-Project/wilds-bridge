@@ -21,7 +21,6 @@ num1/num2:  "User" (dither grid) or "Handset" (acquisition tweaks)
 """
 
 import datetime
-from typing import Literal
 
 from pydantic_xml import BaseXmlModel, attr, element
 
