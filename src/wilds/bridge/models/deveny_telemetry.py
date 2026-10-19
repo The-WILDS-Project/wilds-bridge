@@ -6,16 +6,17 @@ WILDS replaces DeVeny at LDT; this model is kept as the reference that
 wilds.loisTelemetry (WildsTelemetry) is patterned on, and for listening to
 the live DeVeny topic during testing.
 
-Schema reference:
-  https://github.com/LowellObservatory/ligmos/blob/master/ligmos/schemas/deveny.loisTelemetry.xsd
+Schema: schemas/deveny.loisTelemetry.xsd (vendored from ligmos)
 
 Every element is minOccurs="0" in the XSD, so all fields are optional.
 """
 
-from pydantic_xml import BaseXmlModel, element
+from pydantic_xml import element
+
+from .inbound import InboundXmlModel
 
 
-class DevenyTelemetry(BaseXmlModel, tag="DevenyTelemetry"):
+class DevenyTelemetry(InboundXmlModel, tag="DevenyTelemetry"):
     TimeStamp: int | None = element(default=None)  # Unix epoch seconds
 
     # --- Calibration lamps (Cd, Ar, Ne, Hg) ---

@@ -162,20 +162,20 @@ TCS_STATUS_XML = """\
 </tcsTCSStatus>"""
 
 WRS_TELEMETRY_XML = """\
-<wrsTelemetry>
-  <Timestamp>1733652000</Timestamp>
+<WRSTelemetry>
+  <TimeStamp>1733652000</TimeStamp>
   <AirTemp>5.2</AirTemp>
   <BarometricPressure>820.1</BarometricPressure>
   <DewPoint>-3.1</DewPoint>
   <RelativeHumidity>42.0</RelativeHumidity>
   <WindDirection>270.0</WindDirection>
   <WindSpeed>3.5</WindSpeed>
-</wrsTelemetry>"""
+</WRSTelemetry>"""
 
 WRS_TELEMETRY_XML_MINIMAL = """\
-<wrsTelemetry>
-  <Timestamp>1733652001</Timestamp>
-</wrsTelemetry>"""
+<WRSTelemetry>
+  <TimeStamp>1733652001</TimeStamp>
+</WRSTelemetry>"""
 
 DEVENY_TELEMETRY_XML = """\
 <DevenyTelemetry>

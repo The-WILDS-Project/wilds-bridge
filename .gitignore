@@ -36,3 +36,6 @@ Thumbs.db
 
 # Secrets
 vault/
+
+# Lowell reference documents (internal; repo is public)
+docs/*.pdf

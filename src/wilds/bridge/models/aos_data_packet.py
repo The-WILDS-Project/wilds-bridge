@@ -5,34 +5,32 @@ pydantic-xml model for:
 Published by the AOS (Active Optics System) LabVIEW at ~1 Hz.
 Key field for focuser: totalFocusOffset (meters).
 
-Schema reference:
-  https://github.com/LowellObservatory/ligmos/blob/master/ligmos/schemas/AOS.AOSPubDataSV.AOSDataPacket.xsd
+Schema: schemas/AOS.AOSPubDataSV.AOSDataPacket.xsd (vendored from ligmos)
 """
 
-from typing import Literal
+import datetime
 
-from pydantic_xml import BaseXmlModel, element
+from pydantic_xml import element
+
+from .inbound import InboundXmlModel
 
 
-class _TipTiltPiston(BaseXmlModel):
+class _TipTiltPiston(InboundXmlModel):
     X_Tilt_rad: float | None = element(default=None)
     Y_Tilt_rad: float | None = element(default=None)
     Piston_m: float | None = element(default=None)
 
 
-class _ComaPointingOffset(BaseXmlModel):
+class _ComaPointingOffset(InboundXmlModel):
     xCorrection_arcsec: float | None = element(default=None)
     yCorrection_arcsec: float | None = element(default=None)
 
 
-class AosDataPacket(BaseXmlModel, tag="AOSDataPacket"):
+class AosDataPacket(InboundXmlModel, tag="AOSDataPacket"):
     """Field order matches XSD element order."""
 
-    timestamp: str | None = element(default=None)        # ISO-8601 with UTC offset
-    detailedState: Literal[
-        "OffState", "StandbyState", "DisabledState", "EnablingSubsystemsState",
-        "UnlockedOpenLoopState", "LockedOpenLoopState", "ClosedLoopState", "FaultState",
-    ] | None = element(default=None)
+    timestamp: datetime.datetime | None = element(default=None)
+    detailedState: str | None = element(default=None)    # e.g. ClosedLoopState, FaultState
     summaryState: str | None = element(default=None)     # Enabled | OffState | StandbyState | DisabledState | FaultState (inconsistent in docs)
     tipTiltPistonDemandM1: _TipTiltPiston | None = element(default=None)
     tipTiltPistonDemandM2: _TipTiltPiston | None = element(default=None)

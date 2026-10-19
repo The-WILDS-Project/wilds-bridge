@@ -184,8 +184,7 @@ class Telescope:
     @property
     def par_angle(self) -> float | None:
         if tcs := self._broker.store.tcs:
-            if tcs.CurrentParAngle is not None:
-                return float(tcs.CurrentParAngle)
+            return tcs.CurrentParAngle
         return None
 
     @property
@@ -227,10 +226,6 @@ class Telescope:
         tcs = self._broker.store.tcs
         tcs_status = self._broker.store.tcs_status
 
-        par_angle = None
-        if tcs and tcs.CurrentParAngle is not None:
-            par_angle = float(tcs.CurrentParAngle)
-
         pointing = None
         offsets = None
         airmass = None
@@ -252,7 +247,7 @@ class Telescope:
             guide_mode=tcs.MountGuideMode if tcs else None,
             m1_cover=tcs.m1CoverState if tcs else None,
             dome_occultation_warning=tcs.DomeOccultationWarning if tcs else None,
-            par_angle=par_angle,
+            par_angle=tcs.CurrentParAngle if tcs else None,
             lst=tcs.TCSLST if tcs else None,
             pointing=pointing,
             airmass=airmass,
