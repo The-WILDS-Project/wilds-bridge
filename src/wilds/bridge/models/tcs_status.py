@@ -9,12 +9,13 @@ Only fields relevant to WILDS are modelled; unknown elements are ignored.
 
 from typing import Literal
 
-from pydantic_xml import BaseXmlModel, element
+from pydantic_xml import element
 
+from .inbound import InboundXmlModel
 from .types import CoordFrame, CoverState, OffsetType, TcsHealth, TcsState
 
 
-class _SexAngle(BaseXmlModel):
+class _SexAngle(InboundXmlModel):
     """Sexagesimal angle — present fields vary by context."""
 
     degreesArc: int | None = element(default=None)    # azimuth degrees
@@ -27,12 +28,12 @@ class _SexAngle(BaseXmlModel):
     secondsTime: float | None = element(default=None)
 
 
-class _AzEl(BaseXmlModel):
+class _AzEl(InboundXmlModel):
     azimuth: _SexAngle = element()
     elevation: _SexAngle = element()
 
 
-class _RADec(BaseXmlModel):
+class _RADec(InboundXmlModel):
     """V1.9: declination comes before ra; frame added; targetName removed."""
 
     declination: _SexAngle = element()
@@ -42,34 +43,34 @@ class _RADec(BaseXmlModel):
     ra: _SexAngle = element()
 
 
-class _RotatorPositions(BaseXmlModel):
+class _RotatorPositions(InboundXmlModel):
     rotPA: float | None = element(default=None)
     iaa: float | None = element(default=None)
     rotIPA: float | None = element(default=None)
 
 
-class _AzElError(BaseXmlModel):
+class _AzElError(InboundXmlModel):
     azError: float | None = element(default=None)
     elError: float | None = element(default=None)
 
 
-class _DifftrackStatus(BaseXmlModel):
+class _DifftrackStatus(InboundXmlModel):
     dAz_ArcsPS: float | None = element(default=None)
     dEl_ArcsPS: float | None = element(default=None)
     dRA_ArcsPS: float | None = element(default=None)
     dDec_ArcsPS: float | None = element(default=None)
 
 
-class _ObjectPA(BaseXmlModel):
+class _ObjectPA(InboundXmlModel):
     EqPA: float | None = element(default=None)
     AzPA: float | None = element(default=None)
 
 
-class _DemandRotatorPositions(BaseXmlModel):
+class _DemandRotatorPositions(InboundXmlModel):
     rotPA: float | None = element(default=None)
 
 
-class _PointingPositions(BaseXmlModel):
+class _PointingPositions(InboundXmlModel):
     """V1.9 field order matches XML element order for correct parsing."""
 
     azElError: _AzElError | None = element(default=None)
@@ -86,25 +87,25 @@ class _PointingPositions(BaseXmlModel):
     targetName: str | None = element(default=None)
 
 
-class _Lst(BaseXmlModel):
+class _Lst(InboundXmlModel):
     hours: int | None = element(default=None)
     minutesTime: int | None = element(default=None)
     secondsTime: float | None = element(default=None)
 
 
-class _CurrentTimes(BaseXmlModel):
+class _CurrentTimes(InboundXmlModel):
     """V1.9: lst is a sub-element; time is an ISO-8601 UTC string."""
 
     lst: _Lst | None = element(default=None)
     time: str | None = element(default=None)
 
 
-class _ProximityAlert(BaseXmlModel):
+class _ProximityAlert(InboundXmlModel):
     distance_deg: float | None = element(default=None)
     proximityFlag: bool | None = element(default=None)
 
 
-class _Zenith(BaseXmlModel):
+class _Zenith(InboundXmlModel):
     currentZD_deg: float | None = element(default=None)
     elZenithLimit_deg: float | None = element(default=None)
     inBlindSpotIsTrue: bool | None = element(default=None)
@@ -112,7 +113,7 @@ class _Zenith(BaseXmlModel):
     timeToBlindSpotExit_min: float | None = element(default=None)
 
 
-class _Limits(BaseXmlModel):
+class _Limits(InboundXmlModel):
     moonProximity: _ProximityAlert | None = element(default=None)
     sunProximity: _ProximityAlert | None = element(default=None)
     zenith: _Zenith | None = element(default=None)
@@ -123,7 +124,7 @@ class _Limits(BaseXmlModel):
     timeToAzLimit_min: float | None = element(default=None)
 
 
-class _OffsetStatus(BaseXmlModel):
+class _OffsetStatus(InboundXmlModel):
     offsetType: OffsetType | None = element(default=None)
     userOff1: float | None = element(default=None)
     userOff2: float | None = element(default=None)
@@ -131,7 +132,7 @@ class _OffsetStatus(BaseXmlModel):
     handsetOff2: float | None = element(default=None)
 
 
-class TcsStatus(BaseXmlModel, tag="tcsTCSStatus"):
+class TcsStatus(InboundXmlModel, tag="tcsTCSStatus"):
     """V1.9 field order matches XML element order for correct parsing."""
 
     tcsVersion: str | None = element(default=None)

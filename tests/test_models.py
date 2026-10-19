@@ -6,6 +6,8 @@ then serialises back to XML and re-parses to confirm round-trip fidelity.
 No network or broker required.
 """
 
+import datetime
+
 import pytest
 
 from wilds.bridge.models.aos_data_packet import AosDataPacket
@@ -55,10 +57,10 @@ class TestTcsTelemetry:
         assert t.InPosition is True
         assert t.TCSHealth == "GOOD"
         assert t.MountGuideMode == "ClosedLoop"
-        assert t.CurrentParAngle == "-12.34"
-        assert t.TCSCurrentRotatorPA == "90.0"
-        assert t.TCSCurrentRotatorIAA == "4.95"
-        assert t.MountTemperature == "7.5"
+        assert t.CurrentParAngle == pytest.approx(-12.34)
+        assert t.TCSCurrentRotatorPA == pytest.approx(90.0)
+        assert t.TCSCurrentRotatorIAA == pytest.approx(4.95)
+        assert t.MountTemperature == pytest.approx(7.5)
         assert t.DomeOccultationWarning is False
         assert t.CLSLowBankState == "On"
         assert t.DSSPositionStatus == "Open"
@@ -157,7 +159,7 @@ class TestTcsStatus:
 class TestWrsTelemetry:
     def test_parse_full(self):
         w = WrsTelemetry.from_xml(WRS_TELEMETRY_XML)
-        assert w.Timestamp == 1733652000
+        assert w.TimeStamp == 1733652000
         assert w.AirTemp == pytest.approx(5.2)
         assert w.BarometricPressure == pytest.approx(820.1)
         assert w.DewPoint == pytest.approx(-3.1)
@@ -167,7 +169,7 @@ class TestWrsTelemetry:
 
     def test_parse_minimal(self):
         w = WrsTelemetry.from_xml(WRS_TELEMETRY_XML_MINIMAL)
-        assert w.Timestamp == 1733652001
+        assert w.TimeStamp == 1733652001
         assert w.AirTemp is None
         assert w.WindSpeed is None
 
@@ -227,7 +229,7 @@ class TestWrsDataPacket:
         assert w.windSpeed == pytest.approx(3.2)
         assert w.windDirection_deg == pytest.approx(294.0)
         assert w.tenMinWindGustSpeed == pytest.approx(5.8)
-        assert w.timestamp == "2018-09-29T01:43:29.000+00:00"
+        assert w.timestamp == datetime.datetime(2018, 9, 29, 1, 43, 29, tzinfo=datetime.UTC)
 
     def test_statistics(self):
         w = WrsDataPacket.from_xml(WRS_DATA_PACKET_XML)
@@ -266,7 +268,7 @@ class TestAosDataPacket:
         assert a.totalFocusOffset == pytest.approx(0.001195)
         assert a.focusOffsetDemandOutOfRange is False
         assert a.wavefrontDataOutOfRange is False
-        assert a.timestamp == "2018-09-29T06:09:34.662+00:00"
+        assert a.timestamp == datetime.datetime(2018, 9, 29, 6, 9, 34, 662000, tzinfo=datetime.UTC)
 
     def test_m2_piston(self):
         a = AosDataPacket.from_xml(AOS_DATA_PACKET_XML)
