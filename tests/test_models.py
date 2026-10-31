@@ -7,6 +7,7 @@ No network or broker required.
 """
 
 import datetime
+from pathlib import Path
 
 import pytest
 
@@ -141,6 +142,34 @@ class TestTcsStatus:
         assert restored.pointingPositions.currentParAngle == pytest.approx(
             original.pointingPositions.currentParAngle
         )
+
+    def test_live_tracking_sample(self):
+        # Captured from the LDT TCS simulator (v1.9) on tanagra, 2026-10-31, while
+        # tracking RA 06:05, Dec +20 with rotator frame Target and rotator PA 0.
+        xml = (Path(__file__).parent / "data" / "tcs_status_v1_9_tracking.xml").read_bytes()
+        s = TcsStatus.from_xml(xml)
+        assert s.tcsVersion == "V1.9"
+        assert s.tcsState == "ENABLED"
+        assert s.mountGuideMode == "OpenLoop"
+        assert s.m1CoverState == "Open"
+        assert s.axesTrackMode == "All"
+        assert (s.inPositionAzIsTrue, s.inPositionElIsTrue, s.inPositionRotIsTrue) == (True, True, False)
+        assert s.externalTargetCfgCmdPreviewIsTrue is False
+        pp = s.pointingPositions
+        assert pp is not None
+        assert pp.demandRADec is not None
+        assert (pp.demandRADec.ra.hours, pp.demandRADec.ra.minutesTime) == (6, 5)
+        assert pp.demandRADec.frame == "FK5"
+        # The slit holds sky PA 0 while the mechanical rotator follows the parallactic angle.
+        assert pp.currentRotatorPositions is not None
+        assert pp.currentRotatorPositions.rotIPA == pytest.approx(0.0)
+        assert pp.currentRotatorPositions.iaa == pytest.approx(185.2)
+        assert pp.currentRotatorPositions.rotPA == pytest.approx(351.449661)
+        assert pp.objectPA is not None
+        assert pp.objectPA.EqPA == pytest.approx(0.0)
+        assert pp.objectPA.AzPA == pytest.approx(pp.currentParAngle)
+        assert s.limits is not None
+        assert s.limits.airmass == pytest.approx(1.0337, abs=1e-4)
 
     def test_all_optional_none_when_absent(self):
         xml = "<tcsTCSStatus/>"
