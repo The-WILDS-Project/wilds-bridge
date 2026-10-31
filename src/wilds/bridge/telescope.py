@@ -128,7 +128,7 @@ class Telescope:
         equinox_prefix: EquinoxPrefix = "J",
         equinox_year: float = 2000.0,
         rot_pa: float = 0.0,
-        rot_frame: RotatorFrame = "Fixed",
+        rot_frame: RotatorFrame = "Target",
         wl_microns: float = 0.5,
         pm_ra_maspyr: float = 0.0,
         pm_dec_maspyr: float = 0.0,
@@ -150,9 +150,14 @@ class Telescope:
         equinox_prefix / equinox_year:
             Equinox, e.g. ``"J"`` / ``2000.0``.
         rot_pa:
-            Rotator position angle in degrees.
+            Instrument position angle in degrees (0–360, East of North): the sky PA of
+            the instrument principal direction, i.e. the slit.
         rot_frame:
-            ``"Fixed"`` (sky PA) or ``"Target"`` (parallactic).
+            ``"Target"`` (TCS default): the rotator tracks in the target's frame, so the
+            field holds still on the slit at ``rot_pa``. ``"Fixed"``: the TCS ignores the
+            IAA, adds 180° to ``rot_pa`` and tracks in Az/El, holding the mechanical
+            rotator near that angle while the sky rotates past.
+            See TCS External Interface Definitions (DCT-0720S-005-I) §3.3.3.2.
         wl_microns:
             Guide wavelength in microns for atmospheric dispersion (default 0.5).
         pm_ra_maspyr / pm_dec_maspyr:

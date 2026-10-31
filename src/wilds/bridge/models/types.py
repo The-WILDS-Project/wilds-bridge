@@ -22,6 +22,8 @@ CoverState = Literal["Open", "Closed", "PartiallyOpen", "Unknown"]
 
 # New-science-target command fields
 EquinoxPrefix = Literal["J", "B"]
+# "Target": track in the target's frame (field fixed on the instrument; TCS default).
+# "Fixed": track in Az/El (mechanical rotator held near the demand; sky rotates).
 RotatorFrame = Literal["Fixed", "Target"]
 
 # wilds-control: slit and ADC
