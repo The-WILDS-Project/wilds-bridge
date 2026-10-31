@@ -44,9 +44,11 @@ class _RADec(InboundXmlModel):
 
 
 class _RotatorPositions(InboundXmlModel):
-    rotPA: float | None = element(default=None)
-    iaa: float | None = element(default=None)
-    rotIPA: float | None = element(default=None)
+    """Rotator angles, degrees. Semantics observed on the v1.9 simulator, 2026-10-31."""
+
+    rotPA: float | None = element(default=None)   # mechanical rotator angle, despite the ICD's "PA on sky"
+    iaa: float | None = element(default=None)     # instrument alignment angle (set by `rotoffset`)
+    rotIPA: float | None = element(default=None)  # demanded instrument PA on sky (target command rotPA)
 
 
 class _AzElError(InboundXmlModel):
@@ -62,12 +64,14 @@ class _DifftrackStatus(InboundXmlModel):
 
 
 class _ObjectPA(InboundXmlModel):
-    EqPA: float | None = element(default=None)
-    AzPA: float | None = element(default=None)
+    """Actual position angle of the instrument principal direction (the slit), degrees."""
+
+    EqPA: float | None = element(default=None)  # on the sky, East of North
+    AzPA: float | None = element(default=None)  # relative to Az/El (EqPA + parallactic angle)
 
 
 class _DemandRotatorPositions(InboundXmlModel):
-    rotPA: float | None = element(default=None)
+    rotPA: float | None = element(default=None)  # demanded mechanical rotator angle, degrees
 
 
 class _PointingPositions(InboundXmlModel):
@@ -153,3 +157,4 @@ class TcsStatus(InboundXmlModel, tag="tcsTCSStatus"):
     inPositionAzIsTrue: bool | None = element(default=None)
     inPositionElIsTrue: bool | None = element(default=None)
     inPositionRotIsTrue: bool | None = element(default=None)
+    externalTargetCfgCmdPreviewIsTrue: bool | None = element(default=None)  # "External command preview" switch
