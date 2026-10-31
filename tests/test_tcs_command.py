@@ -1,5 +1,5 @@
 """
-Unit tests for TcsOffsetCommand.make_offset().
+Unit tests for TcsOffsetCommand.make_offset() and TcsNewScienceTargetCommand.make().
 
 Validates commandID construction (µs since midnight UT per LIG spec)
 and that the resulting object serialises cleanly.
@@ -8,7 +8,7 @@ No network required.
 
 import pytest
 
-from wilds.bridge.models.tcs_command import TcsOffsetCommand
+from wilds.bridge.models.tcs_command import TcsNewScienceTargetCommand, TcsOffsetCommand
 
 _MAX_COMMAND_ID = 86_400 * 1_000_000  # µs in one day
 
@@ -83,3 +83,18 @@ class TestMakeOffset:
         cmd = TcsOffsetCommand.make_offset(3600.0, -3600.0)
         assert cmd.offsetDef.off1 == pytest.approx(3600.0)
         assert cmd.offsetDef.off2 == pytest.approx(-3600.0)
+
+
+class TestNewScienceTarget:
+    def test_rotator_frame_defaults_to_target(self):
+        # Matches the TCS default: the field holds still on the slit at rot_pa.
+        cmd = TcsNewScienceTargetCommand.make("M31", 0.7123, 41.27)
+        rotator = cmd.scienceTargetConfiguration.rotator
+        assert rotator.rotatorFrame == "Target"
+        assert rotator.rotPA == pytest.approx(0.0)
+
+    def test_rotator_settings_serialised(self):
+        cmd = TcsNewScienceTargetCommand.make("M31", 0.7123, 41.27, rot_pa=96.3, rot_frame="Fixed")
+        xml = cmd.to_xml(encoding="unicode")
+        assert "<rotPA>96.3</rotPA>" in xml
+        assert "<rotatorFrame>Fixed</rotatorFrame>" in xml
