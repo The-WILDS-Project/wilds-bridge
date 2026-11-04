@@ -14,6 +14,8 @@ from wilds.bridge.models.tcs_command import (
     TcsScienceTargetCommand,
 )
 
+from .fixtures import NEW_SCIENCE_TARGET_XML
+
 _MAX_COMMAND_ID = 86_400 * 1_000_000  # µs in one day
 
 
@@ -126,3 +128,50 @@ class TestScienceTarget:
         assert config.target.targetName == "M31"
         assert config.rotator.rotPA == pytest.approx(96.3)
         assert str(config.to_xml(encoding="unicode")).startswith("<scienceTargetConfiguration>")
+
+
+class TestWithRotator:
+    @pytest.fixture
+    def current(self):
+        return TcsNewScienceTarget.from_xml(NEW_SCIENCE_TARGET_XML).scienceTargetConfiguration
+
+    def test_report_parses_despite_element_order(self, current):
+        # The report orders tcsErrorResponse status/code/source; ours is code/source/status.
+        assert current.tcsErrorResponse.code == 0
+        assert current.tcsErrorResponse.status is False
+
+    def test_only_rotator_changes(self, current):
+        cmd = current.with_rotator(120.0)
+        assert cmd.rotator.rotPA == pytest.approx(120.0)
+        assert cmd.target == current.target
+        assert cmd.wl_microns == current.wl_microns
+        assert cmd.fracrate == current.fracrate
+        assert cmd.targetConfigName == current.targetConfigName
+
+    def test_differential_rates_kept(self, current):
+        cmd = current.with_rotator(120.0)
+        assert cmd.target.difftrack.dRA_ArcsPS == pytest.approx(0.01)
+        assert cmd.target.difftrack.dDec_ArcsPS == pytest.approx(-0.02)
+
+    def test_frame_kept_unless_given(self, current):
+        assert current.with_rotator(10.0).rotator.rotatorFrame == "Target"
+        assert current.with_rotator(10.0, "Fixed").rotator.rotatorFrame == "Fixed"
+
+    def test_pa_normalised(self, current):
+        assert current.with_rotator(-30.0).rotator.rotPA == pytest.approx(330.0)
+        assert current.with_rotator(360.0).rotator.rotPA == pytest.approx(0.0)
+
+    def test_fresh_command_id(self, current):
+        cmd = current.with_rotator(120.0)
+        assert cmd.commandID != current.commandID
+        assert 0 < cmd.commandID < _MAX_COMMAND_ID
+
+    def test_original_untouched(self, current):
+        current.with_rotator(120.0)
+        assert current.rotator.rotPA == pytest.approx(30.0)
+
+    def test_serialises_as_command(self, current):
+        xml = str(current.with_rotator(120.0).to_xml(encoding="unicode"))
+        assert xml.startswith("<scienceTargetConfiguration>")
+        assert "<rotPA>120.0</rotPA>" in xml
+        assert "<targetName>Crab Nebula</targetName>" in xml

@@ -321,3 +321,72 @@ TCS_CLEAR_OFFSET_XML = """\
   </tcsErrorResponse>
   <num2>User</num2>
 </scienceTargetClearOffset>"""
+
+# The TCS's report of its current target (NewScienceTargetSV). Structure as in LIG's
+# interface example, including its status/code/source order in tcsErrorResponse, which
+# differs from the offset commands'.
+NEW_SCIENCE_TARGET_XML = """\
+<newScienceTarget>
+  <demandRADec>
+    <declination>
+      <degreesDec>22</degreesDec>
+      <minutesArc>0</minutesArc>
+      <secondsArc>52.0</secondsArc>
+    </declination>
+    <equinoxPrefix>J</equinoxPrefix>
+    <equinoxYear>2000</equinoxYear>
+    <frame>FK5</frame>
+    <ra>
+      <hours>5</hours>
+      <minutesTime>34</minutesTime>
+      <secondsTime>32.0</secondsTime>
+    </ra>
+  </demandRADec>
+  <pointingOriginX>0</pointingOriginX>
+  <pointingOriginY>0</pointingOriginY>
+  <scienceTargetConfiguration>
+    <fracrate>1</fracrate>
+    <rotator>
+      <rotPA>30.0</rotPA>
+      <rotatorFrame>Target</rotatorFrame>
+    </rotator>
+    <target class="TCSDataDefinitions.TCSCommand.TargetConfiguration.Target.FixedTarget.RADecTarget">
+      <raDecParameters>
+        <declination>
+          <degreesDec>22.014444</degreesDec>
+          <minutesArc>0</minutesArc>
+          <secondsArc>0</secondsArc>
+        </declination>
+        <equinoxPrefix>J</equinoxPrefix>
+        <equinoxYear>2000</equinoxYear>
+        <frame>FK5</frame>
+        <ra>
+          <hours>5.575556</hours>
+          <minutesTime>0</minutesTime>
+          <secondsTime>0</secondsTime>
+        </ra>
+      </raDecParameters>
+      <parallax_Arcsec>0</parallax_Arcsec>
+      <properMotion>
+        <epochPM_Yr>2000</epochPM_Yr>
+        <pmRA_masPYr>0</pmRA_masPYr>
+        <pmDec_masPYr>0</pmDec_masPYr>
+      </properMotion>
+      <rv_kps>0</rv_kps>
+      <targetName>Crab Nebula</targetName>
+      <difftrack class="TCSDataDefinitions.TCSCommand.TargetConfiguration.Target.DifftrackRADec">
+        <dRA_ArcsPS>0.01</dRA_ArcsPS>
+        <dDec_ArcsPS>-0.02</dDec_ArcsPS>
+      </difftrack>
+    </target>
+    <targetConfigName>Crab Nebula</targetConfigName>
+    <wl_microns>0.6</wl_microns>
+    <commandID>255286109</commandID>
+    <tcsErrorResponse>
+      <status>false</status>
+      <code>0</code>
+      <source/>
+    </tcsErrorResponse>
+  </scienceTargetConfiguration>
+  <trackID>58886.295901</trackID>
+</newScienceTarget>"""

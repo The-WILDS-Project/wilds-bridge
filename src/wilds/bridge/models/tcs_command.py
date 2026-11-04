@@ -28,6 +28,11 @@ from pydantic_xml import BaseXmlModel, attr, element
 
 from .types import CoordFrame, EquinoxPrefix, OffsetNum, OffsetType, RotatorFrame
 
+# Target models also parse the TCS's own reports (NewScienceTargetSV), whose element
+# order needn't match ours: LIG's examples order tcsErrorResponse differently for
+# offsets and targets. Serialisation still follows field order.
+_UNORDERED = "unordered"
+
 
 def _make_command_id() -> int:
     now = datetime.datetime.now(datetime.UTC)
@@ -36,7 +41,7 @@ def _make_command_id() -> int:
     )
 
 
-class _TcsErrorResponse(BaseXmlModel):
+class _TcsErrorResponse(BaseXmlModel, search_mode=_UNORDERED):
     """Placeholder sent with commands; TCS fills it in on the reply."""
 
     code: int = element(default=0)
@@ -97,19 +102,19 @@ class TcsAbsorbOffsetCommand(BaseXmlModel, tag="scienceTargetAbsorbOffset"):
 # ---------------------------------------------------------------------------
 
 
-class _Dec(BaseXmlModel):
+class _Dec(BaseXmlModel, search_mode=_UNORDERED):
     degreesDec: float = element()
     minutesArc: int = element()
     secondsArc: float = element()
 
 
-class _RA(BaseXmlModel):
+class _RA(BaseXmlModel, search_mode=_UNORDERED):
     hours: float = element()
     minutesTime: int = element()
     secondsTime: float = element()
 
 
-class _TargetRADec(BaseXmlModel):
+class _TargetRADec(BaseXmlModel, search_mode=_UNORDERED):
     """Element order matches the XML schema: declination, equinox, frame, ra."""
 
     declination: _Dec = element()
@@ -119,18 +124,18 @@ class _TargetRADec(BaseXmlModel):
     ra: _RA = element()
 
 
-class _NewTargetRotator(BaseXmlModel):
+class _NewTargetRotator(BaseXmlModel, search_mode=_UNORDERED):
     rotPA: float = element()
     rotatorFrame: RotatorFrame = element()
 
 
-class _ProperMotion(BaseXmlModel):
+class _ProperMotion(BaseXmlModel, search_mode=_UNORDERED):
     epochPM_Yr: float = element()
     pmRA_masPYr: float = element()
     pmDec_masPYr: float = element()
 
 
-class _Difftrack(BaseXmlModel):
+class _Difftrack(BaseXmlModel, search_mode=_UNORDERED):
     class_: str = attr(
         name="class",
         default="TCSDataDefinitions.TCSCommand.TargetConfiguration.Target.DifftrackRADec",
@@ -139,7 +144,7 @@ class _Difftrack(BaseXmlModel):
     dDec_ArcsPS: float = element()
 
 
-class _FixedTarget(BaseXmlModel):
+class _FixedTarget(BaseXmlModel, search_mode=_UNORDERED):
     class_: str = attr(
         name="class",
         default="TCSDataDefinitions.TCSCommand.TargetConfiguration.Target.FixedTarget.RADecTarget",
@@ -152,7 +157,9 @@ class _FixedTarget(BaseXmlModel):
     difftrack: _Difftrack = element()
 
 
-class TcsScienceTargetCommand(BaseXmlModel, tag="scienceTargetConfiguration"):
+class TcsScienceTargetCommand(
+    BaseXmlModel, tag="scienceTargetConfiguration", search_mode=_UNORDERED
+):
     """
     Command a new science target slew.
 
@@ -218,8 +225,30 @@ class TcsScienceTargetCommand(BaseXmlModel, tag="scienceTargetConfiguration"):
             commandID=_make_command_id(),
         )
 
+    def with_rotator(
+        self, rot_pa: float, rot_frame: RotatorFrame | None = None
+    ) -> "TcsScienceTargetCommand":
+        """
+        The same target with a new rotator, ready to send as a new command.
 
-class TcsNewScienceTarget(BaseXmlModel, tag="newScienceTarget"):
+        Everything else (coordinates, offsets' basis, differential rates, wavelength)
+        is kept. ``rot_pa`` is normalised to [0, 360); ``rot_frame=None`` keeps the
+        current frame. The copy gets a fresh commandID and a clean tcsErrorResponse.
+        """
+        rotator = _NewTargetRotator(
+            rotPA=rot_pa % 360.0, rotatorFrame=rot_frame or self.rotator.rotatorFrame
+        )
+        return self.model_copy(
+            deep=True,
+            update={
+                "rotator": rotator,
+                "commandID": _make_command_id(),
+                "tcsErrorResponse": _TcsErrorResponse(),
+            },
+        )
+
+
+class TcsNewScienceTarget(BaseXmlModel, tag="newScienceTarget", search_mode=_UNORDERED):
     """
     The TCS's current science target, as it reports it.
 

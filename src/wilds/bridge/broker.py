@@ -42,6 +42,7 @@ from .config import (
     TOPIC_AOS_FOCUS_CLEAR,
     TOPIC_AOS_FOCUS_RELATIVE,
     TOPIC_INSTRUMENT_CUBE,
+    TOPIC_NEW_SCIENCE_TARGET,
     TOPIC_TCS_COMMAND,
     TOPIC_TCS_STATUS,
     TOPIC_TCS_TELEMETRY,
@@ -57,6 +58,7 @@ from .models.instrument_cube_telemetry import InstrumentCubeTelemetry
 from .models.tcs_command import (
     TcsAbsorbOffsetCommand,
     TcsClearOffsetCommand,
+    TcsNewScienceTarget,
     TcsOffsetCommand,
     TcsScienceTargetCommand,
 )
@@ -280,6 +282,8 @@ class LDTBroker:
                 return InstrumentCubeTelemetry.from_xml(body)
             if topic == TOPIC_WILDS_TELEMETRY:
                 return WildsTelemetry.from_xml(body)
+            if topic == TOPIC_NEW_SCIENCE_TARGET:
+                return TcsNewScienceTarget.from_xml(body)
         except Exception:
             logger.warning("Failed to parse message on topic %s", topic, exc_info=True)
             return None
@@ -306,3 +310,5 @@ class LDTBroker:
             self.store.instrument_cube = parsed
         elif topic == TOPIC_WILDS_TELEMETRY and isinstance(parsed, WildsTelemetry):
             self.store.wilds = parsed
+        elif topic == TOPIC_NEW_SCIENCE_TARGET and isinstance(parsed, TcsNewScienceTarget):
+            self.store.new_science_target = parsed

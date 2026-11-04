@@ -12,6 +12,7 @@ from wilds.bridge.broker import LDTBroker
 from wilds.bridge.config import (
     TOPIC_AOS_DATA_PACKET,
     TOPIC_INSTRUMENT_CUBE,
+    TOPIC_NEW_SCIENCE_TARGET,
     TOPIC_TCS_STATUS,
     TOPIC_TCS_TELEMETRY,
     TOPIC_WILDS_TELEMETRY,
@@ -20,6 +21,7 @@ from wilds.bridge.config import (
 )
 from wilds.bridge.models.aos_data_packet import AosDataPacket
 from wilds.bridge.models.instrument_cube_telemetry import InstrumentCubeTelemetry
+from wilds.bridge.models.tcs_command import TcsNewScienceTarget
 from wilds.bridge.models.tcs_status import TcsStatus
 from wilds.bridge.models.tcs_telemetry import TcsTelemetry
 from wilds.bridge.models.wilds_telemetry import WildsTelemetry
@@ -29,6 +31,7 @@ from wilds.bridge.models.wrs_telemetry import WrsTelemetry
 from .fixtures import (
     AOS_DATA_PACKET_XML,
     INSTRUMENT_CUBE_XML,
+    NEW_SCIENCE_TARGET_XML,
     TCS_STATUS_XML,
     TCS_TELEMETRY_XML,
     WILDS_TELEMETRY_XML,
@@ -125,6 +128,11 @@ class TestParse:
         result = broker._parse(TOPIC_WILDS_TELEMETRY, WILDS_TELEMETRY_XML)
         assert isinstance(result, WildsTelemetry)
 
+    def test_new_science_target(self, broker):
+        result = broker._parse(TOPIC_NEW_SCIENCE_TARGET, NEW_SCIENCE_TARGET_XML)
+        assert isinstance(result, TcsNewScienceTarget)
+        assert result.scienceTargetConfiguration.target.targetName == "Crab Nebula"
+
     def test_unknown_topic_returns_raw_string(self, broker):
         result = broker._parse("some.unknown.topic", "<foo>bar</foo>")
         assert result == "<foo>bar</foo>"
@@ -148,6 +156,11 @@ class TestUpdateStore:
         t = TcsTelemetry.from_xml(TCS_TELEMETRY_XML)
         broker._update_store(TOPIC_TCS_TELEMETRY, t)
         assert broker.store.tcs is t
+
+    def test_new_science_target_updates_store(self, broker):
+        t = TcsNewScienceTarget.from_xml(NEW_SCIENCE_TARGET_XML)
+        broker._update_store(TOPIC_NEW_SCIENCE_TARGET, t)
+        assert broker.store.new_science_target is t
 
     def test_tcs_status_updates_store(self, broker):
         s = TcsStatus.from_xml(TCS_STATUS_XML)
