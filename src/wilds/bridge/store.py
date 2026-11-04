@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 
 from .models.aos_data_packet import AosDataPacket
 from .models.instrument_cube_telemetry import InstrumentCubeTelemetry
+from .models.tcs_command import TcsNewScienceTarget
 from .models.tcs_status import TcsStatus
 from .models.tcs_telemetry import TcsTelemetry
 from .models.wilds_telemetry import WildsTelemetry
@@ -43,6 +44,9 @@ class TelemetryStore:
     tcs_status: TcsStatus | None = field(default=None)
     """Latest TCSTcsStatusSV frame (~1 Hz)."""
 
+    new_science_target: TcsNewScienceTarget | None = field(default=None)
+    """The TCS's current target, from NewScienceTargetSV (sent when the target changes)."""
+
     wrs: WrsTelemetry | None = field(default=None)
     """Latest wrs.loisTelemetry frame (schema unverified, placeholder)."""
 
@@ -62,6 +66,7 @@ class TelemetryStore:
         """Reset all cached values (e.g. on broker reconnect)."""
         self.tcs = None
         self.tcs_status = None
+        self.new_science_target = None
         self.wrs = None
         self.wrs_packet = None
         self.aos = None

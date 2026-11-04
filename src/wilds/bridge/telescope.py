@@ -10,6 +10,7 @@ Usage::
 
     await telescope.offset(-8.1, 12.0)
     await telescope.clear_offset()
+    await telescope.set_rotator(45.0)       # slit sky PA, keeping the current target
 
     if telescope.in_position:
         print(telescope.par_angle)
@@ -24,8 +25,8 @@ from pydantic import BaseModel, ConfigDict
 from .models.tcs_command import (
     TcsAbsorbOffsetCommand,
     TcsClearOffsetCommand,
-    TcsNewScienceTargetCommand,
     TcsOffsetCommand,
+    TcsScienceTargetCommand,
 )
 from .models.tcs_status import _OffsetStatus, _PointingPositions
 from .models.types import (
@@ -41,6 +42,10 @@ from .models.types import (
 
 if TYPE_CHECKING:
     from .broker import LDTBroker
+
+
+class TargetUnknownError(RuntimeError):
+    """The TCS's current target isn't known, so it can't be re-sent safely."""
 
 
 class TelescopeStatus(BaseModel):
@@ -137,6 +142,9 @@ class Telescope:
     ) -> None:
         """Command a new science target slew.
 
+        Sends a ``<scienceTargetConfiguration>`` to TCSTcsCommandSV. With the TCS's
+        External Command Preview on, the operator must approve it before the slew.
+
         Parameters
         ----------
         target_name:
@@ -167,14 +175,52 @@ class Telescope:
         rv_kps:
             Radial velocity in km/s.
         """
-        cmd = TcsNewScienceTargetCommand.make(
+        cmd = TcsScienceTargetCommand.make(
             target_name, ra_hours, dec_deg,
             frame=frame, equinox_prefix=equinox_prefix, equinox_year=equinox_year,
             rot_pa=rot_pa, rot_frame=rot_frame, wl_microns=wl_microns,
             pm_ra_maspyr=pm_ra_maspyr, pm_dec_maspyr=pm_dec_maspyr,
             parallax_arcsec=parallax_arcsec, rv_kps=rv_kps,
         )
-        await self._broker.send_new_target(cmd)
+        await self._broker.send_tcs_command(cmd)
+
+    async def set_rotator(self, rot_pa: float, *, rot_frame: RotatorFrame | None = None) -> None:
+        """Rotate the slit to a new sky PA, keeping the current target.
+
+        The TCS has no rotator-only command. As LDT's own software does it (Tim
+        Ellsworth-Bowers, 2026-11-02), this takes the TCS's latest report of its current
+        target (NewScienceTargetSV), replaces only the rotator and sends the result to
+        TCSTcsCommandSV, so offsets and differential tracking rates are preserved.
+
+        Parameters
+        ----------
+        rot_pa:
+            Slit sky PA in degrees, East of North; normalised to [0, 360).
+        rot_frame:
+            ``"Target"`` or ``"Fixed"`` (see :meth:`slew_to`); ``None`` keeps the
+            current frame.
+
+        Raises
+        ------
+        TargetUnknownError
+            No target report has been received since the bridge connected, or it names
+            a different target than TCSTcsStatusSV, i.e. it may be stale. Re-sending it
+            would move the telescope, so nothing is sent.
+        """
+        report = self._broker.store.new_science_target
+        if report is None:
+            raise TargetUnknownError(
+                "no NewScienceTargetSV report received yet; send a target with slew_to first"
+            )
+        current = report.scienceTargetConfiguration
+        status = self._broker.store.tcs_status
+        if status and status.pointingPositions and (name := status.pointingPositions.targetName):
+            if name.strip() != current.target.targetName.strip():
+                raise TargetUnknownError(
+                    f"target report is for {current.target.targetName!r} "
+                    f"but the TCS is on {name!r}"
+                )
+        await self._broker.send_tcs_command(current.with_rotator(rot_pa, rot_frame))
 
     # ------------------------------------------------------------------
     # State — from tcs.loisTelemetry (~2 Hz)
