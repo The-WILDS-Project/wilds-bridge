@@ -42,7 +42,6 @@ from .config import (
     TOPIC_AOS_FOCUS_CLEAR,
     TOPIC_AOS_FOCUS_RELATIVE,
     TOPIC_INSTRUMENT_CUBE,
-    TOPIC_NEW_SCIENCE_TARGET,
     TOPIC_TCS_COMMAND,
     TOPIC_TCS_STATUS,
     TOPIC_TCS_TELEMETRY,
@@ -58,8 +57,8 @@ from .models.instrument_cube_telemetry import InstrumentCubeTelemetry
 from .models.tcs_command import (
     TcsAbsorbOffsetCommand,
     TcsClearOffsetCommand,
-    TcsNewScienceTargetCommand,
     TcsOffsetCommand,
+    TcsScienceTargetCommand,
 )
 from .models.tcs_status import TcsStatus
 from .models.tcs_telemetry import TcsTelemetry
@@ -68,7 +67,9 @@ from .models.wrs_data_packet import WrsDataPacket
 from .models.wrs_telemetry import WrsTelemetry
 from .store import TelemetryStore
 
-TcsCommand = TcsOffsetCommand | TcsClearOffsetCommand | TcsAbsorbOffsetCommand
+TcsCommand = (
+    TcsOffsetCommand | TcsClearOffsetCommand | TcsAbsorbOffsetCommand | TcsScienceTargetCommand
+)
 
 logger = logging.getLogger(__name__)
 
@@ -152,18 +153,11 @@ class LDTBroker:
         )
 
     async def send_tcs_command(self, command: TcsCommand) -> None:
-        """Send a TCS offset command to TCSTcsCommandSV."""
+        """Send a TCS command (offset or science target) to TCSTcsCommandSV."""
         body = command.to_xml(encoding="unicode")
         assert self._connection is not None
         assert body is not None and isinstance(body, (str, bytes))
         self._connection.send(TOPIC_TCS_COMMAND, body.decode() if isinstance(body, bytes) else body)
-
-    async def send_new_target(self, command: TcsNewScienceTargetCommand) -> None:
-        """Send a new science target command to NewScienceTargetSV."""
-        body = command.to_xml(encoding="unicode")
-        assert self._connection is not None
-        assert body is not None and isinstance(body, (str, bytes))
-        self._connection.send(TOPIC_NEW_SCIENCE_TARGET, body.decode() if isinstance(body, bytes) else body)
 
     async def send_aos_focus_offset(self, meters: float, *, relative: bool = False) -> None:
         """Send an AOS focus offset command. Units: meters."""

@@ -1,12 +1,14 @@
 """
 pydantic-xml models for TCS commands.
 
-Offset commands publish to:
+All commands publish to:
   TCS.TCSSharedVariables.TCSSubData.TCSTcsCommandSV
   (reply on TCSTcsCommandResponseSV)
 
-New-target command publishes to:
-  TCS.TCSSharedVariables.TCSLowLevelStatusSV.NewScienceTargetSV
+A new science target is a <scienceTargetConfiguration> command on that topic
+(Tim Ellsworth-Bowers, 2026-11-02). NewScienceTargetSV is TCS → broker: the TCS
+reports its current target there, wrapped in <newScienceTarget>; messages
+published to it never reach the TCS.
 
 commandID per LIG spec: microseconds since midnight UT.
   round((now.hour*3600 + now.minute*60 + now.second + now.microsecond/1e6) * 1e6)
@@ -91,7 +93,7 @@ class TcsAbsorbOffsetCommand(BaseXmlModel, tag="scienceTargetAbsorbOffset"):
 
 
 # ---------------------------------------------------------------------------
-# New science target — NewScienceTargetSV
+# Science target — command on TCSTcsCommandSV, telemetry on NewScienceTargetSV
 # ---------------------------------------------------------------------------
 
 
@@ -150,7 +152,19 @@ class _FixedTarget(BaseXmlModel):
     difftrack: _Difftrack = element()
 
 
-class _ScienceTargetConfig(BaseXmlModel):
+class TcsScienceTargetCommand(BaseXmlModel, tag="scienceTargetConfiguration"):
+    """
+    Command a new science target slew.
+
+    Publish to: TCS.TCSSharedVariables.TCSSubData.TCSTcsCommandSV
+
+    Depending on the TCS operator state, the telescope will either queue
+    the target for preview or begin slewing immediately.
+
+    The rotator is set only through this command (JIRA TCSD-131): to rotate, re-send
+    the current target with a new ``rotator``.
+    """
+
     fracrate: float = element()
     rotator: _NewTargetRotator = element()
     target: _FixedTarget = element()
@@ -158,23 +172,6 @@ class _ScienceTargetConfig(BaseXmlModel):
     wl_microns: float = element()
     commandID: int = element()
     tcsErrorResponse: _TcsErrorResponse = element(default_factory=_TcsErrorResponse)
-
-
-class TcsNewScienceTargetCommand(BaseXmlModel, tag="newScienceTarget"):
-    """
-    Command a new science target slew.
-
-    Publish to: TCS.TCSSharedVariables.TCSLowLevelStatusSV.NewScienceTargetSV
-
-    Depending on the TCS operator state, the telescope will either queue
-    the target for preview or begin slewing immediately.
-    """
-
-    demandRADec: _TargetRADec = element()
-    pointingOriginX: float = element(default=0.0)
-    pointingOriginY: float = element(default=0.0)
-    scienceTargetConfiguration: _ScienceTargetConfig = element()
-    trackID: float = element(default=0.0)
 
     @classmethod
     def make(
@@ -193,7 +190,7 @@ class TcsNewScienceTargetCommand(BaseXmlModel, tag="newScienceTarget"):
         pm_dec_maspyr: float = 0.0,
         parallax_arcsec: float = 0.0,
         rv_kps: float = 0.0,
-    ) -> "TcsNewScienceTargetCommand":
+    ) -> "TcsScienceTargetCommand":
         radec = _TargetRADec(
             declination=_Dec(degreesDec=dec_deg, minutesArc=0, secondsArc=0.0),
             equinoxPrefix=equinox_prefix,
@@ -202,24 +199,38 @@ class TcsNewScienceTargetCommand(BaseXmlModel, tag="newScienceTarget"):
             ra=_RA(hours=ra_hours, minutesTime=0, secondsTime=0.0),
         )
         return cls(
-            demandRADec=radec,
-            scienceTargetConfiguration=_ScienceTargetConfig(
-                fracrate=1.0,
-                rotator=_NewTargetRotator(rotPA=rot_pa, rotatorFrame=rot_frame),
-                target=_FixedTarget(
-                    raDecParameters=radec,
-                    parallax_Arcsec=parallax_arcsec,
-                    properMotion=_ProperMotion(
-                        epochPM_Yr=equinox_year,
-                        pmRA_masPYr=pm_ra_maspyr,
-                        pmDec_masPYr=pm_dec_maspyr,
-                    ),
-                    rv_kps=rv_kps,
-                    targetName=target_name,
-                    difftrack=_Difftrack(dRA_ArcsPS=0.0, dDec_ArcsPS=0.0),
+            fracrate=1.0,
+            rotator=_NewTargetRotator(rotPA=rot_pa, rotatorFrame=rot_frame),
+            target=_FixedTarget(
+                raDecParameters=radec,
+                parallax_Arcsec=parallax_arcsec,
+                properMotion=_ProperMotion(
+                    epochPM_Yr=equinox_year,
+                    pmRA_masPYr=pm_ra_maspyr,
+                    pmDec_masPYr=pm_dec_maspyr,
                 ),
-                targetConfigName=target_name,
-                wl_microns=wl_microns,
-                commandID=_make_command_id(),
+                rv_kps=rv_kps,
+                targetName=target_name,
+                difftrack=_Difftrack(dRA_ArcsPS=0.0, dDec_ArcsPS=0.0),
             ),
+            targetConfigName=target_name,
+            wl_microns=wl_microns,
+            commandID=_make_command_id(),
         )
+
+
+class TcsNewScienceTarget(BaseXmlModel, tag="newScienceTarget"):
+    """
+    The TCS's current science target, as it reports it.
+
+    Published by the TCS on: TCS.TCSSharedVariables.TCSLowLevelStatusSV.NewScienceTargetSV
+    (TCS → broker only). ``scienceTargetConfiguration`` is the starting point for
+    re-sending the target, e.g. with a new rotator, which keeps any offsets and
+    differential rates.
+    """
+
+    demandRADec: _TargetRADec = element()
+    pointingOriginX: float = element(default=0.0)
+    pointingOriginY: float = element(default=0.0)
+    scienceTargetConfiguration: TcsScienceTargetCommand = element()
+    trackID: float = element(default=0.0)

@@ -24,8 +24,8 @@ from pydantic import BaseModel, ConfigDict
 from .models.tcs_command import (
     TcsAbsorbOffsetCommand,
     TcsClearOffsetCommand,
-    TcsNewScienceTargetCommand,
     TcsOffsetCommand,
+    TcsScienceTargetCommand,
 )
 from .models.tcs_status import _OffsetStatus, _PointingPositions
 from .models.types import (
@@ -137,6 +137,9 @@ class Telescope:
     ) -> None:
         """Command a new science target slew.
 
+        Sends a ``<scienceTargetConfiguration>`` to TCSTcsCommandSV. With the TCS's
+        External Command Preview on, the operator must approve it before the slew.
+
         Parameters
         ----------
         target_name:
@@ -167,14 +170,14 @@ class Telescope:
         rv_kps:
             Radial velocity in km/s.
         """
-        cmd = TcsNewScienceTargetCommand.make(
+        cmd = TcsScienceTargetCommand.make(
             target_name, ra_hours, dec_deg,
             frame=frame, equinox_prefix=equinox_prefix, equinox_year=equinox_year,
             rot_pa=rot_pa, rot_frame=rot_frame, wl_microns=wl_microns,
             pm_ra_maspyr=pm_ra_maspyr, pm_dec_maspyr=pm_dec_maspyr,
             parallax_arcsec=parallax_arcsec, rv_kps=rv_kps,
         )
-        await self._broker.send_new_target(cmd)
+        await self._broker.send_tcs_command(cmd)
 
     # ------------------------------------------------------------------
     # State — from tcs.loisTelemetry (~2 Hz)

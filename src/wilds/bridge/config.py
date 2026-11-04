@@ -9,11 +9,13 @@ TOPIC_AOS_TELEMETRY = "aos.loisTelemetry"
 TOPIC_AOS_DATA_PACKET = "AOS.AOSPubDataSV.AOSDataPacket"
 TOPIC_INSTRUMENT_CUBE = "instrumentCube.loisTelemetry"
 TOPIC_WILDS_TELEMETRY = "wilds.loisTelemetry"
+# The TCS's current target (TCS → broker); not a command topic
+TOPIC_NEW_SCIENCE_TARGET = "TCS.TCSSharedVariables.TCSLowLevelStatusSV.NewScienceTargetSV"
 
 # ActiveMQ topic names — publish (commands)
+# All TCS commands, including new science targets
 TOPIC_TCS_COMMAND = "TCS.TCSSharedVariables.TCSSubData.TCSTcsCommandSV"
 TOPIC_TCS_COMMAND_REPLY = "TCS.TCSSharedVariables.TCSLowLevelStatusSV.TCSTcsCommandResponseSV"
-TOPIC_NEW_SCIENCE_TARGET = "TCS.TCSSharedVariables.TCSLowLevelStatusSV.NewScienceTargetSV"
 TOPIC_AOS_FOCUS_ABSOLUTE = "AOS.AOSSubDataSV.AbsoluteFocusOffset"   # float in meters
 TOPIC_AOS_FOCUS_RELATIVE = "AOS.AOSSubDataSV.RelativeFocusOffset"   # float in meters
 TOPIC_AOS_FOCUS_CLEAR = "AOS.AOSSubDataSV.ClearFocusOffset"         # send "true"

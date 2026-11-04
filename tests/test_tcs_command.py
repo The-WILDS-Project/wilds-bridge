@@ -1,5 +1,5 @@
 """
-Unit tests for TcsOffsetCommand.make_offset() and TcsNewScienceTargetCommand.make().
+Unit tests for TcsOffsetCommand.make_offset() and TcsScienceTargetCommand.make().
 
 Validates commandID construction (µs since midnight UT per LIG spec)
 and that the resulting object serialises cleanly.
@@ -8,7 +8,11 @@ No network required.
 
 import pytest
 
-from wilds.bridge.models.tcs_command import TcsNewScienceTargetCommand, TcsOffsetCommand
+from wilds.bridge.models.tcs_command import (
+    TcsNewScienceTarget,
+    TcsOffsetCommand,
+    TcsScienceTargetCommand,
+)
 
 _MAX_COMMAND_ID = 86_400 * 1_000_000  # µs in one day
 
@@ -85,16 +89,40 @@ class TestMakeOffset:
         assert cmd.offsetDef.off2 == pytest.approx(-3600.0)
 
 
-class TestNewScienceTarget:
+class TestScienceTarget:
     def test_rotator_frame_defaults_to_target(self):
         # Matches the TCS default: the field holds still on the slit at rot_pa.
-        cmd = TcsNewScienceTargetCommand.make("M31", 0.7123, 41.27)
-        rotator = cmd.scienceTargetConfiguration.rotator
-        assert rotator.rotatorFrame == "Target"
-        assert rotator.rotPA == pytest.approx(0.0)
+        cmd = TcsScienceTargetCommand.make("M31", 0.7123, 41.27)
+        assert cmd.rotator.rotatorFrame == "Target"
+        assert cmd.rotator.rotPA == pytest.approx(0.0)
 
     def test_rotator_settings_serialised(self):
-        cmd = TcsNewScienceTargetCommand.make("M31", 0.7123, 41.27, rot_pa=96.3, rot_frame="Fixed")
+        cmd = TcsScienceTargetCommand.make("M31", 0.7123, 41.27, rot_pa=96.3, rot_frame="Fixed")
         xml = cmd.to_xml(encoding="unicode")
         assert "<rotPA>96.3</rotPA>" in xml
         assert "<rotatorFrame>Fixed</rotatorFrame>" in xml
+
+    def test_root_is_science_target_configuration(self):
+        # The command on TCSTcsCommandSV, not the <newScienceTarget> telemetry wrapper.
+        xml = str(TcsScienceTargetCommand.make("M31", 0.7123, 41.27).to_xml(encoding="unicode"))
+        assert xml.startswith("<scienceTargetConfiguration>")
+        assert "<newScienceTarget>" not in xml
+        assert "<commandID>" in xml
+        assert "<tcsErrorResponse>" in xml
+
+    def test_commandid_within_day(self):
+        cmd = TcsScienceTargetCommand.make("M31", 0.7123, 41.27)
+        assert 0 < cmd.commandID < _MAX_COMMAND_ID
+
+    def test_extracted_from_telemetry(self):
+        # The TCS reports its current target wrapped in <newScienceTarget>; the inner
+        # configuration is a ready command, the basis for re-sending with a new rotator.
+        sent = TcsScienceTargetCommand.make("M31", 0.7123, 41.27, rot_pa=96.3)
+        report = TcsNewScienceTarget(
+            demandRADec=sent.target.raDecParameters, scienceTargetConfiguration=sent
+        )
+        parsed = TcsNewScienceTarget.from_xml(report.to_xml(encoding="unicode"))
+        config = parsed.scienceTargetConfiguration
+        assert config.target.targetName == "M31"
+        assert config.rotator.rotPA == pytest.approx(96.3)
+        assert str(config.to_xml(encoding="unicode")).startswith("<scienceTargetConfiguration>")
