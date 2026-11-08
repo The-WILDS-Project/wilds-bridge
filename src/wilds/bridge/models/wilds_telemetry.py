@@ -67,7 +67,7 @@ class WildsTelemetry(BaseXmlModel, tag="wildsTelemetry"):
     LastFITSFileUV: str | None = element(default=None)
 
     @classmethod
-    def now(cls, **kwargs) -> "WildsTelemetry":
+    def now(cls, **kwargs) -> WildsTelemetry:
         """Convenience constructor that fills Timestamp with current UTC epoch."""
         return cls(
             Timestamp=int(datetime.datetime.now(datetime.UTC).timestamp()),
