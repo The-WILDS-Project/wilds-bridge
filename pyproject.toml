@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "wilds-bridge"
 version = "0.1.0"
 description = "LDT ActiveMQ bridge for the WILDS spectrograph"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 dependencies = [
     "stomp.py>=4.1.21",
     "pydantic>=2.0",
@@ -29,7 +29,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 line-length = 100
 
 [tool.ruff.lint]

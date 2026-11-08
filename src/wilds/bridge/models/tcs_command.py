@@ -68,7 +68,7 @@ class TcsOffsetCommand(BaseXmlModel, tag="scienceTargetOffset"):
         off2: float,
         offset_type: OffsetType = "TPLANE",
         num1: OffsetNum = "User",
-    ) -> "TcsOffsetCommand":
+    ) -> TcsOffsetCommand:
         return cls(
             commandID=_make_command_id(),
             offsetDef=_OffsetDef(off1=off1, off2=off2, offsetType=offset_type, num1=num1),
@@ -81,7 +81,7 @@ class TcsClearOffsetCommand(BaseXmlModel, tag="scienceTargetClearOffset"):
     num2: OffsetNum = element(default="User")
 
     @classmethod
-    def make(cls, num2: OffsetNum = "User") -> "TcsClearOffsetCommand":
+    def make(cls, num2: OffsetNum = "User") -> TcsClearOffsetCommand:
         return cls(commandID=_make_command_id(), num2=num2)
 
 
@@ -93,7 +93,7 @@ class TcsAbsorbOffsetCommand(BaseXmlModel, tag="scienceTargetAbsorbOffset"):
     num2: OffsetNum = element(default="User")
 
     @classmethod
-    def make(cls, num2: OffsetNum = "User") -> "TcsAbsorbOffsetCommand":
+    def make(cls, num2: OffsetNum = "User") -> TcsAbsorbOffsetCommand:
         return cls(commandID=_make_command_id(), num2=num2)
 
 
@@ -197,7 +197,7 @@ class TcsScienceTargetCommand(
         pm_dec_maspyr: float = 0.0,
         parallax_arcsec: float = 0.0,
         rv_kps: float = 0.0,
-    ) -> "TcsScienceTargetCommand":
+    ) -> TcsScienceTargetCommand:
         radec = _TargetRADec(
             declination=_Dec(degreesDec=dec_deg, minutesArc=0, secondsArc=0.0),
             equinoxPrefix=equinox_prefix,
@@ -227,7 +227,7 @@ class TcsScienceTargetCommand(
 
     def with_rotator(
         self, rot_pa: float, rot_frame: RotatorFrame | None = None
-    ) -> "TcsScienceTargetCommand":
+    ) -> TcsScienceTargetCommand:
         """
         The same target with a new rotator, ready to send as a new command.
 
