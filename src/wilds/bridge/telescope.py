@@ -142,8 +142,9 @@ class Telescope:
     ) -> None:
         """Command a new science target slew.
 
-        Sends a ``<scienceTargetConfiguration>`` to TCSTcsCommandSV. With the TCS's
-        External Command Preview on, the operator must approve it before the slew.
+        Sends a ``<scienceTargetConfiguration>`` to TCSTcsCommandSV. The TCS acts on it
+        while it accepts external commands; with its External Command Preview on it only holds
+        the target for preview and does not slew.
 
         Parameters
         ----------
