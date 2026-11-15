@@ -20,6 +20,11 @@ TOPIC_AOS_FOCUS_ABSOLUTE = "AOS.AOSSubDataSV.AbsoluteFocusOffset"   # float in m
 TOPIC_AOS_FOCUS_RELATIVE = "AOS.AOSSubDataSV.RelativeFocusOffset"   # float in meters
 TOPIC_AOS_FOCUS_CLEAR = "AOS.AOSSubDataSV.ClearFocusOffset"         # send "true"
 
+# The instrument cube's stage controller ("joeStage", as the LDT support astronomer named it, Nov 2026).
+# XML <stage-command> text: the instrument cover is axis AZ, function IC. The full topic name is
+# to be confirmed with LDT.
+TOPIC_JOE_STAGE_COMMAND = "joeStage"
+
 # Topics the bridge subscribes to by default
 DEFAULT_SUBSCRIPTIONS = [
     TOPIC_TCS_TELEMETRY,
