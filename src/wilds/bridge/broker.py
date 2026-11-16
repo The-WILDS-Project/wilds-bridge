@@ -42,6 +42,7 @@ from .config import (
     TOPIC_AOS_FOCUS_CLEAR,
     TOPIC_AOS_FOCUS_RELATIVE,
     TOPIC_INSTRUMENT_CUBE,
+    TOPIC_JOE_STAGE_COMMAND,
     TOPIC_NEW_SCIENCE_TARGET,
     TOPIC_TCS_COMMAND,
     TOPIC_TCS_STATUS,
@@ -160,6 +161,14 @@ class LDTBroker:
         assert self._connection is not None
         assert body is not None and isinstance(body, (str, bytes))
         self._connection.send(TOPIC_TCS_COMMAND, body.decode() if isinstance(body, bytes) else body)
+
+    async def send_stage_command(self, xml: str) -> None:
+        """Send an XML ``<stage-command>`` to the instrument cube's stage controller. Unlike the
+        other sends it raises when there is no connection, so a caller never believes a stage
+        moved on a message that was dropped."""
+        if self._connection is None or not self._connection.is_connected():
+            raise ConnectionError("not connected to the LDT broker")
+        self._connection.send(TOPIC_JOE_STAGE_COMMAND, xml)
 
     async def send_aos_focus_offset(self, meters: float, *, relative: bool = False) -> None:
         """Send an AOS focus offset command. Units: meters."""
